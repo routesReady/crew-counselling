@@ -8,24 +8,30 @@ import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import CrewData from "./models/InsertedData.js";
 
-dotenv.config();
+dotenv.config(); // ✅ Load environment variables
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || "*", // Allow your frontend
+  methods: ["GET", "POST"],
+}));
 app.use(express.json());
 
-// Path helpers
+// ✅ Resolve __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const bioDataPath = path.join(__dirname, "Bio_Data_New.xlsx");
 
-// MongoDB connection
+// ✅ MongoDB connection using correct variable name
 mongoose
-  .connect(process.env.MONGODB_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => console.log("✅ MongoDB connected successfully"))
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Fetch crew details from Excel
+// ✅ Route: Fetch crew details from Excel
 app.get("/fetchUser/:crewId", (req, res) => {
   const crewId = req.params.crewId.trim().toUpperCase();
   if (!fs.existsSync(bioDataPath)) {
@@ -36,8 +42,10 @@ app.get("/fetchUser/:crewId", (req, res) => {
     const workbook = XLSX.readFile(bioDataPath);
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const data = XLSX.utils.sheet_to_json(sheet);
+
     const user = data.find((r) => r.CREWID?.toString().toUpperCase() === crewId);
     if (!user) return res.status(404).json({ message: "Crew ID not found" });
+
     res.json(user);
   } catch (err) {
     console.error("Excel read error:", err);
@@ -45,7 +53,7 @@ app.get("/fetchUser/:crewId", (req, res) => {
   }
 });
 
-// Insert data into MongoDB
+// ✅ Route: Insert data into MongoDB
 app.post("/insertUser", async (req, res) => {
   try {
     const newEntry = new CrewData(req.body);
@@ -57,7 +65,7 @@ app.post("/insertUser", async (req, res) => {
   }
 });
 
-// Download all inserted data as Excel
+// ✅ Route: Download all inserted data as Excel
 app.get("/download", async (req, res) => {
   try {
     const allData = await CrewData.find();
@@ -79,5 +87,6 @@ app.get("/download", async (req, res) => {
   }
 });
 
+// ✅ Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
