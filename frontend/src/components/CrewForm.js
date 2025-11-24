@@ -236,7 +236,7 @@ const CrewForm = () => {
                   <option value="2026">2026</option>
                 </select>
                 <input
-                  type="number"
+                  type="text"
                   name="roadNumber"
                   placeholder="Enter Number"
                   value={formData.roadNumber}
@@ -307,3 +307,4 @@ const CrewForm = () => {
 };
 
 export default CrewForm;
+
